@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(visionText -> {
                     // Task completed successfully
                     Log.d("TAG", "" +
-                            "n" +visionText.getText());
+                            "\n" +visionText.getText());
 //                    int i = 0;
 //                    for (Text.TextBlock block : visionText.getTextBlocks()) {
 //                        String blockText = block.getText();
