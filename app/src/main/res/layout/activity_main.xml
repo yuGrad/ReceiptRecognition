@@ -6,6 +6,15 @@
     android:background="@color/white"
     tools:context=".MainActivity">
 
+    <ImageView
+        android:id="@+id/image_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/contentTextView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:visibility="gone" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/image_upload_button"
         android:layout_width="wrap_content"
@@ -17,18 +26,11 @@
         android:id="@+id/contentTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="<영수증 인식 결과>"
         android:layout_centerInParent="true"
-        android:visibility="invisible"
-        />
-    <ImageView
-        android:id="@+id/image_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/contentTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
-        android:visibility="invisible" />
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        android:text="영수증 인식 결과" />
 
     <TextView
         android:id="@+id/resultTextView"
@@ -37,7 +39,8 @@
         android:layout_below="@id/contentTextView"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
-        android:visibility="invisible" />
+        android:textColor="@color/black"
+        android:visibility="gone" />
 
 
 </RelativeLayout>
