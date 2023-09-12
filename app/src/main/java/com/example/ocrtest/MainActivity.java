@@ -12,8 +12,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
@@ -25,19 +27,26 @@ import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
+    Button imageUploadButton;
+    ImageView imageView;
+    TextView contentTextView;
+    TextView resultTextView;
+
+    InputImage inputImage;
     TextRecognizer recognizer;
     Uri uri;
-    ImageView imageView;
-    InputImage inputImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        recognizer  = TextRecognition.getClient(new KoreanTextRecognizerOptions.Builder().build());
-        Button imageUploadButton = findViewById(R.id.image_upload_button);
+        // 위젯 init
+        recognizer = TextRecognition.getClient(new KoreanTextRecognizerOptions.Builder().build());
+        imageUploadButton = findViewById(R.id.image_upload_button);
         imageView = findViewById(R.id.image_view);
+        contentTextView = findViewById(R.id.contentTextView);
+        resultTextView = findViewById(R.id.resultTextView);
 
         imageUploadButton.setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_PICK);
@@ -46,44 +55,54 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        uri = result.getData().getData();
-                        Log.d("TAG", uri.toString());
-                        try {
-                            inputImage = InputImage.fromFilePath(MainActivity.this, uri);
-                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                            imageView.setImageBitmap(bitmap);
+    private void changeView(Bitmap bitmap, String textResult) {
+        imageUploadButton.setVisibility(View.INVISIBLE);
+        imageView.setVisibility(View.VISIBLE);
+        contentTextView.setVisibility(View.VISIBLE);
+        resultTextView.setVisibility(View.VISIBLE);
 
-                            getTextProcessResult(inputImage);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+        imageView.setImageBitmap(bitmap);
+        resultTextView.setText(textResult);
+    }
+
+    ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+        @Override
+        public void onActivityResult(ActivityResult result) {
+            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                uri = result.getData().getData();
+                Log.d("TAG", uri.toString());
+                try {
+                    inputImage = InputImage.fromFilePath(MainActivity.this, uri);
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+
+                    getTextProcessResult(inputImage, new TextRecognitionCallback() {
+                        @Override
+                        public void onSuccess(String text) {
+                            Log.d("TAG", "\n" + text);
+                            changeView(bitmap, text);
                         }
-                    }
-                }
-            });
 
-    void getTextProcessResult(InputImage inputImage){
-        Task<Text> result = recognizer.process(inputImage)
-                .addOnSuccessListener(visionText -> {
-                    // Task completed successfully
-                    Log.d("TAG", "" +
-                            "\n" +visionText.getText());
-//                    int i = 0;
-//                    for (Text.TextBlock block : visionText.getTextBlocks()) {
-//                        String blockText = block.getText();
-//                        Log.d("TAG", i + ": " + blockText);
-//                    }
-
-                })
-                .addOnFailureListener(
-                        e -> {
-                            // Task failed with an exception
+                        @Override
+                        public void onFailure(Exception e) {
                             Log.d("TAG", "Why?", e);
-                        });
+                            changeView(bitmap, "텍스트 인식 Error");
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
+
+    void getTextProcessResult(InputImage inputImage, TextRecognitionCallback callback) {
+        recognizer.process(inputImage).addOnSuccessListener(visionText -> {
+            // Task completed successfully
+            callback.onSuccess(visionText.getText());
+
+        }).addOnFailureListener(e -> {
+            // Task failed with an exception
+            callback.onFailure(e);
+        });
     }
 }
